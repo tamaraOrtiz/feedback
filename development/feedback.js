@@ -85,7 +85,7 @@
 				if (!settings.initialBox) {
 					$('#feedback-highlighter-back').remove();
 					canDraw = true;
-					$('#feedback-canvas').css('cursor', 'crosshair');
+					//$('#feedback-canvas').css('cursor', 'crosshair');
 					$('#feedback-helpers').show();
 					$('#feedback-welcome').hide();
 					$('#feedback-highlighter').show();
@@ -138,7 +138,9 @@
 				drag 		= false;
 				highlight 	= 1,
 				post		= {};
-
+				post.htmlElements = [];
+				htmlElements = {};
+				$('.feedback-additional').hide();
 				if (settings.postBrowserInfo) {
 					post.browser 				= {};
 					post.browser.appCodeName	= navigator.appCodeName;
@@ -153,22 +155,24 @@
 					$.each(navigator.plugins, function(i) {
 						post.browser.plugins.push(navigator.plugins[i].name);
 					});
-					$('#feedback-browser-info').show();
+					//$('#feedback-browser-info').show();
+					//$('#feedback-browser-info-text').text(post.browser);
 				}
 
 				if (settings.postURL) {
 					post.url = document.URL;
-					$('#feedback-page-info').show();
+					//$('#feedback-page-info').show();
+					//$('#feedback-page-info-text').show();
 				}
 
 				if (settings.postHTML) {
 					post.html = $('html').html();
-					$('#feedback-page-structure').show();
+					//$('#feedback-page-structure').show();
 				}
 
 				if (!settings.postBrowserInfo && !settings.postURL && !settings.postHTML)
 					$('#feedback-additional-none').show();
-
+				
 				$(document).on('mousedown', '#feedback-canvas', function(e) {
 					if (canDraw) {
 
@@ -179,7 +183,7 @@
 						drag = true;
 					}
 				});
-
+				
 				$(document).on('mouseup', function(){
 					if (canDraw) {
 						drag = false;
@@ -209,7 +213,7 @@
 						if (highlight == 0)
 							dtype = 'blackout';
 
-						$('#feedback-helpers').append('<div class="feedback-helper" data-type="' + dtype + '" data-time="' + Date.now() + '" style="position:absolute;top:' + dtop + 'px;left:' + dleft + 'px;width:' + dwidth + 'px;height:' + dheight + 'px;z-index:30000;"></div>');
+						//$('#feedback-helpers').append('<div class="feedback-helper" data-type="' + dtype + '" data-time="' + Date.now() + '" style="position:absolute;top:' + dtop + 'px;left:' + dleft + 'px;width:' + dwidth + 'px;height:' + dheight + 'px;z-index:30000;"></div>');
 
 						redraw(ctx);
 						rect.w = 0;
@@ -251,7 +255,7 @@
 						}
 					}
 				});
-
+				
 				if (settings.highlightElement) {
 					var highlighted = [],
 						tmpHighlighted = [],
@@ -262,13 +266,14 @@
 							redraw(ctx);
 							tmpHighlighted = [];
 
-							$('#feedback-canvas').css('cursor', 'crosshair');
+							//$('#feedback-canvas').css('cursor', 'crosshair');
 
 							$('* :not(body,script,iframe,div,section,.feedback-btn,#feedback-module *)').each(function(){
 								if ($(this).attr('data-highlighted') === 'true')
 									return;
 
 								if (e.pageX > $(this).offset().left && e.pageX < $(this).offset().left + $(this).width() && e.pageY > $(this).offset().top + parseInt($(this).css('padding-top'), 10) && e.pageY < $(this).offset().top + $(this).height() + parseInt($(this).css('padding-top'), 10)) {
+										
 										tmpHighlighted.push($(this));
 								}
 							});
@@ -277,11 +282,16 @@
 
 							if ($toHighlight && !drag) {
 								$('#feedback-canvas').css('cursor', 'pointer');
-
+								temp = $toHighlight.width() + parseInt($toHighlight.css('padding-left'), 10) + parseInt($toHighlight.css('padding-right'), 10) ;
+								w_fit = 0;
+								if (temp > ($(document).width() - 20)){
+									w_fit = 5;
+								}
 								var _x = $toHighlight.offset().left - 2,
 									_y = $toHighlight.offset().top - 2,
-									_w = $toHighlight.width() + parseInt($toHighlight.css('padding-left'), 10) + parseInt($toHighlight.css('padding-right'), 10) + 6,
+									_w = $toHighlight.width() + parseInt($toHighlight.css('padding-left'), 10) + parseInt($toHighlight.css('padding-right'), 10) - w_fit,
 									_h = $toHighlight.height() + parseInt($toHighlight.css('padding-top'), 10) + parseInt($toHighlight.css('padding-bottom'), 10) + 6;
+								
 
 								if (highlight == 1) {
 									drawlines(ctx, _x, _y, _w, _h);
@@ -292,6 +302,7 @@
 								$('.feedback-helper').each(function() {
 									if ($(this).attr('data-type') == 'highlight')
 										ctx.clearRect(parseInt($(this).css('left'), 10), parseInt($(this).css('top'), 10), $(this).width(), $(this).height());
+
 								});
 
 								if (highlight == 0) {
@@ -308,7 +319,9 @@
 								});
 
 								if (e.type == 'click' && e.pageX == rect.startX && e.pageY == rect.startY) {
-									$('#feedback-helpers').append('<div class="feedback-helper" data-highlight-id="' + hidx + '" data-type="' + dtype + '" data-time="' + Date.now() + '" style="position:absolute;top:' + _y + 'px;left:' + _x + 'px;width:' + _w + 'px;height:' + _h + 'px;z-index:30000;"></div>');
+									post.htmlElements.push(tmpHighlighted[tmpHighlighted.length - 1]);
+									htmlElements[hidx] = tmpHighlighted[tmpHighlighted.length - 1];
+									a = $('#feedback-helpers').append('<div class="feedback-helper" data-highlight-id="' + hidx + '" data-type="' + dtype + '" data-time="' + Date.now() + '" style="position:absolute;top:' + _y + 'px;left:' + _x + 'px;width:' + _w + 'px;height:' + _h + 'px;z-index:30000;"></div>');
 									highlighted.push(hidx);
 									++hidx;
 									redraw(ctx);
@@ -329,7 +342,7 @@
 				$(document).on('click', '#feedback-welcome-next', function() {
 					if ($('#feedback-note').val().length > 0) {
 						canDraw = true;
-						$('#feedback-canvas').css('cursor', 'crosshair');
+						//$('#feedback-canvas').css('cursor', 'crosshair');
 						$('#feedback-helpers').show();
 						$('#feedback-welcome').hide();
 						$('#feedback-highlighter').show();
@@ -398,7 +411,8 @@
 				$(document).on('click', '#feedback-close', function() {
 					if (settings.highlightElement && $(this).parent().attr('data-highlight-id'))
 						var _hidx = $(this).parent().attr('data-highlight-id');
-
+					itemtoRemove = htmlElements[_hidx];
+					post.htmlElements.splice($.inArray(itemtoRemove, post.htmlElements),1);
 					$(this).parent().remove();
 
 					if (settings.highlightElement && _hidx)
@@ -484,7 +498,7 @@
 
 				$(document).on('click', '#feedback-overview-back', function(e) {
 					canDraw = true;
-					$('#feedback-canvas').css('cursor', 'crosshair');
+					//$('#feedback-canvas').css('cursor', 'crosshair');
 					$('#feedback-overview').hide();
 					$('#feedback-helpers').show();
 					$('#feedback-highlighter').show();
